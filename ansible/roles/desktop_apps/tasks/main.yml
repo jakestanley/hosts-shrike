@@ -72,3 +72,33 @@
     | rejectattr('stdout', 'search', '(?i)already installed')
     | list
     | length > 0
+
+# Per-app post-install configuration. Small enough to inline for now;
+# factor out into per-app task files if this grows.
+
+# Playnite: launch the 10ft fullscreen UI at login. Writes the same
+# HKCU Run value that Playnite's own "Launch Playnite when you sign in
+# to Windows" toggle would (value name `Playnite`), pointing at
+# Playnite.FullscreenApp.exe rather than the desktop exe. Probes both
+# per-user and per-machine install locations since winget's silent
+# install path depends on whether the session token is elevated.
+- name: Set Playnite to start in fullscreen at login
+  ansible.builtin.raw: >-
+    $paths = @(
+      (Join-Path $env:LOCALAPPDATA 'Playnite\Playnite.FullscreenApp.exe'),
+      (Join-Path ${env:ProgramFiles} 'Playnite\Playnite.FullscreenApp.exe'),
+      (Join-Path ${env:ProgramFiles(x86)} 'Playnite\Playnite.FullscreenApp.exe')
+    );
+    $exe = $paths | Where-Object { Test-Path $_ } | Select-Object -First 1;
+    if (-not $exe) { Write-Output 'Playnite not installed; skipping'; exit 0 };
+    $target = '"' + $exe + '"';
+    $key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run';
+    $current = (Get-ItemProperty -Path $key -Name Playnite -ErrorAction SilentlyContinue).Playnite;
+    if ($current -eq $target) {
+      Write-Output 'unchanged'
+    } else {
+      Set-ItemProperty -Path $key -Name Playnite -Value $target;
+      Write-Output ('changed: ' + $target)
+    }
+  register: playnite_autostart
+  changed_when: "'changed' in (playnite_autostart.stdout | default(''))"
