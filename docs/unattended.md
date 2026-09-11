@@ -136,6 +136,9 @@ and the sshd event log.
 ansible-playbook playbooks/shrike-desktop-apps.yml
 ```
 
-No prompts. The role is idempotent — re-runs are safe (winget detects
-already-installed packages and skips). See `AGENTS.md`
-"Adding a new desktop app" for how to modify the list.
+No prompts. The role is idempotent — re-runs are safe. The task pre-checks
+`winget list` per package and skips the install call entirely when
+already present, which also sidesteps the MSIX-hang failure mode (some
+packaged apps, notably `AgileBits.1Password`, hang the winget install
+CLI when a running instance would need an interactive close dialog).
+See `AGENTS.md` "Adding a new desktop app" for how to modify the list.

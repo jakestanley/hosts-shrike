@@ -70,20 +70,6 @@ bootstrap by design:
 Tracked here to keep them off the immediate critical path. Add as the need
 arises, not pre-emptively.
 
-### Switch 1Password to the MSI winget package
-
-`AgileBits.1Password` is the consumer installer — silent install hangs
-indefinitely when 1Password is already running because the installer
-tries to close it via an interactive dialog that never renders under a
-non-interactive session. Symptom: `winget install` on shrike takes 0
-CPU, no network, no visible installer child process — the raw play just
-sits until we `Stop-Process` the winget PID by hand. `AgileBits.1Password.MSI`
-is the enterprise MSI variant and supports a real unattended install
-path (`msiexec /qn`). Swap the id in
-`ansible/roles/desktop_apps/defaults/main.yml`, verify the MSI package
-actually exists on winget's default source, and run the desktop-apps
-play with 1Password already running to confirm it no longer hangs.
-
 ### Reintroduce a small set of task-level tags
 
 Tags were stripped from all roles to remove visual noise and a tag-table

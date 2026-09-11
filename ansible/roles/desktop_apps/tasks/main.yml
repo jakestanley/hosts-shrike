@@ -7,11 +7,27 @@
 # "already installed" string is the source of truth — rc is a coarse
 # signal only.
 #
+# We pre-check `winget list` per package and short-circuit with an
+# "already installed" marker on match, rather than delegating that
+# decision to `winget install`. MSIX packages (AgileBits.1Password
+# is the reference case) can hang `winget install` indefinitely when a
+# running instance would trigger an interactive close dialog — bypassing
+# the install call entirely when the app is already present avoids the
+# whole failure mode, and every downstream check still sees the same
+# "already installed" stdout it saw before.
+#
 # failed_when is deferred so one bad package does not hide the result
 # of the others; the final task aggregates and fails on any real
 # errors.
 - name: winget install desktop package
   ansible.builtin.raw: >-
+    $listed = winget list --exact --id {{ item.id }}
+    --source {{ item.source }} --accept-source-agreements 2>&1;
+    if ($LASTEXITCODE -eq 0 -and ($listed | Select-String -Quiet
+    -SimpleMatch '{{ item.id }}')) {
+      Write-Output '{{ item.id }} is already installed.';
+      exit 0
+    }
     winget install --exact --id {{ item.id }}
     --source {{ item.source }} --silent
     --accept-source-agreements --accept-package-agreements 2>&1;

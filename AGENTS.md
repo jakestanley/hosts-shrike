@@ -58,6 +58,33 @@ To add a new app:
    `ansible-playbook playbooks/shrike-desktop-apps.yml`. The role is
    idempotent; re-runs are safe.
 
+## Desktop apps: winget install hangs on MSIX packages
+
+If a `winget install` invocation from the `desktop_apps` role hangs
+indefinitely (no CPU, no network, no visible installer child process),
+suspect an MSIX package whose installer would trigger an interactive
+close dialog when a running instance of the app is present. The dialog
+never renders under the non-interactive SSH-as-mail transport, so the
+call blocks until the winget PID is killed by hand. `AgileBits.1Password`
+is the reference case; expect the same pattern from any MSIX / Store-
+packaged app that self-updates outside of winget.
+
+The role's install task pre-checks `winget list --exact --id <id>` per
+package and short-circuits with an "already installed" marker on match,
+which sidesteps the failure mode entirely once the app is present. So:
+
+- Do NOT swap to a `.MSI` id "for a real unattended path" — for
+  1Password specifically there is no such id on the default winget
+  source (only `AgileBits.1Password`, `.Beta`, `.CLI`); the current
+  `AgileBits.1Password` manifest already ships an MSIX bundle.
+- Do NOT drop the entry from `desktop_packages` — the pre-check keeps
+  the play idempotent, and leaving the id in place still gets it
+  installed on a fresh rebuild (when the app isn't running yet, the
+  install call itself works fine).
+- If a first-time install on a rebuild does hang, the interactive
+  fallback is: SSH in interactively (or use the console), close the
+  running app, re-run the play.
+
 ## Removing a desktop app
 
 Remove the entry from `desktop_packages` in
