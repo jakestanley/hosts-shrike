@@ -81,6 +81,54 @@
     enabled: true
     profiles: [domain, private]
 
+- name: Enable Network Discovery and File Sharing firewall groups (Private profile)
+  # Turns on the Windows built-in firewall groups so shrike appears in
+  # other LAN devices' File Explorer network view and can serve SMB
+  # shares. Restricted to the Private profile — shrike lives on a home
+  # LAN. Idempotency: checks for any Private-scoped rule still disabled
+  # in the groups before touching them.
+  ansible.windows.win_powershell:
+    script: |
+      $groups = @('Network Discovery','File and Printer Sharing')
+      $rules  = foreach ($g in $groups) {
+        Get-NetFirewallRule -DisplayGroup $g -ErrorAction SilentlyContinue
+      }
+      $disabled = @($rules | Where-Object { $_.Enabled -eq 'False' -and $_.Profile -like '*Private*' })
+      if ($disabled.Count -gt 0) {
+        foreach ($g in $groups) {
+          Set-NetFirewallRule -DisplayGroup $g -Enabled True -Profile Private
+        }
+        $Ansible.Changed = $true
+        $Ansible.Result  = @{ enabled_count = $disabled.Count }
+      } else {
+        $Ansible.Changed = $false
+      }
+
+- name: Ensure SMB server and client services are auto-started
+  ansible.windows.win_service:
+    name: "{{ item }}"
+    state: started
+    start_mode: auto
+  loop:
+    - LanmanServer      # SMB server (serves shares)
+    - LanmanWorkstation # SMB client (mounts shares)
+
+- name: Ensure network discovery helper services are startable
+  # Windows defaults these to Manual — they auto-start on demand when
+  # the discovery firewall rules fire. Explicitly ensuring `state:
+  # started` here so the machine is discoverable immediately after
+  # provisioning without needing a reboot or a network browse to
+  # trigger them.
+  ansible.windows.win_service:
+    name: "{{ item }}"
+    state: started
+    start_mode: manual
+  loop:
+    - fdPHost   # Function Discovery Provider Host
+    - FDResPub  # Function Discovery Resource Publication
+    - SSDPSRV   # SSDP Discovery
+    - upnphost  # UPnP Device Host
+
 - name: Ensure w32time service is auto-started
   ansible.windows.win_service:
     name: w32time
