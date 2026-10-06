@@ -71,5 +71,5 @@ Upsnap, HTTP is simpler.
 Edit `sol_version` in `ansible/roles/common/defaults/main.yml` and re-run:
 
 ```sh
-ansible-playbook playbooks/shrike-bootstrap.yml --ask-pass
+ansible-playbook playbooks/shrike-bootstrap.yml
 ```

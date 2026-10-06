@@ -7,21 +7,27 @@ Conventions for AI agents (and humans) working in this repo.
 This repo is the canonical source of truth for provisioning the Windows
 host `shrike`. It contains:
 
-- An Ansible bootstrap (`ansible/`) for everything that can be managed
-  cleanly over WinRM (services, registry, networking, AppX bloatware
-  removal, homelab service clones) and the desktop apps role driven
-  over SSH-as-mail (`roles/desktop_apps/`).
+- An Ansible bootstrap (`ansible/`) for the machine config (services,
+  registry, networking, AppX bloatware removal, homelab service clones),
+  run over SSH as `ansible`, and the desktop apps role driven over
+  SSH-as-mail (`roles/desktop_apps/`).
 - Docs (`docs/`) covering the one-time manual setup that bootstraps the
   SSH transport and autologon.
 
-Two transports for two reasons:
+Two SSH users for two reasons, both key auth with no password prompt.
+sshd reads one `administrators_authorized_keys` file for every admin,
+so the single published key covers both:
 
-- **WinRM as `ansible`** (local admin) for the standard machine config.
-  Network logon, no AppX provisioning needed.
-- **SSH key auth as `mail`** (MSA user) for winget. SSH key auth
+- **SSH as `ansible`** (local admin, inventory group `windows`) for the
+  standard machine config.
+- **SSH as `mail`** (MSA user, inventory group `shrike_ssh`) for winget. SSH key auth
   bypasses Windows LSA password auth, so the MSA passwordless setting
   doesn't block it; the session runs in the interactive-equivalent
   context that AppX/winget require.
+
+WinRM (`windows_winrm`, password via `--ask-pass`) is used only by
+`shrike-ssh-bootstrap.yml`, which has to run before SSH exists on a
+fresh rebuild. Don't add other playbooks to it.
 
 ## Running Ansible from the controller
 
@@ -31,12 +37,16 @@ is provided by `shell.nix`. Enter it first:
 ```sh
 nix-shell                                                # from repo root
 cd ansible
-ansible-playbook playbooks/<playbook>.yml [--ask-pass]
+ansible-playbook playbooks/<playbook>.yml
 ```
 
 The `shellHook` installs the collections from `ansible/requirements.yml`
 into `.ansible/collections` on first entry. Use this for any deploy or
 re-run (services role, desktop apps, SSH bootstrap, etc.).
+
+If `nix-shell` isn't usable (e.g. no access to the nix daemon), system
+`ansible-core` with `pywinrm` and the collections in
+`ansible/requirements.yml` works the same way from `ansible/`.
 
 ## Adding a new desktop app
 
@@ -97,7 +107,7 @@ on a fresh rebuild.
 If the app needs to be actively uninstalled from existing hosts (e.g.
 because we no longer want it provisioned for new user accounts), the
 Ansible `common` role's "Remove default Microsoft bloatware AppX
-packages" task uses native `Remove-AppxPackage` and works over WinRM —
+packages" task uses native `Remove-AppxPackage` and runs as `ansible` —
 extend that list instead. AppX-only path; for classic Win32 installers,
 manual uninstall remains the answer.
 

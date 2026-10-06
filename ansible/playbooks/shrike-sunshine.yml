@@ -4,7 +4,7 @@
 # sunshine.conf or refreshing firewall rules in isolation.
 #
 # Usage:
-#   ansible-playbook playbooks/shrike-sunshine.yml --ask-pass
+#   ansible-playbook playbooks/shrike-sunshine.yml
 - name: Configure Sunshine on shrike
   hosts: windows
   gather_facts: false

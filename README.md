@@ -19,7 +19,8 @@ Set-Item WSMan:\localhost\Service\AllowUnencrypted $true
 New-NetFirewallRule -DisplayName "WinRM HTTP" -Direction Inbound -Protocol TCP -LocalPort 5985 -Action Allow -Profile Domain,Private
 ```
 
-Inventory uses `ansible_user=ansible`; supply the password via `--ask-pass`.
+The only password prompt is the one-time SSH bootstrap (WinRM as
+`ansible`, `--ask-pass`). Every other playbook uses SSH key auth.
 
 From the controller (Nix):
 
@@ -27,13 +28,14 @@ From the controller (Nix):
 nix-shell                          # installs ansible, pywinrm, collections
 cd ansible
 # edit inventory.ini (host, user)
-ansible-playbook playbooks/shrike-bootstrap.yml --ask-pass       # config baseline (WinRM)
-ansible-playbook playbooks/shrike-ssh-bootstrap.yml --ask-pass   # one-time: OpenSSH + key
-ansible-playbook playbooks/shrike-desktop-apps.yml               # desktop apps via SSH
+ansible-playbook playbooks/shrike-ssh-bootstrap.yml --ask-pass   # one-time: OpenSSH + key (WinRM)
+ansible-playbook playbooks/shrike-bootstrap.yml                  # config baseline (SSH as ansible)
+ansible-playbook playbooks/shrike-desktop-apps.yml               # desktop apps (SSH as mail)
 ```
 
 The SSH bootstrap publishes your `~/.ssh/id_ed25519.pub` into shrike's
-`administrators_authorized_keys`; if you don't have a keypair yet run
+`administrators_authorized_keys`, which sshd reads for every admin
+account, so it authorises both `ansible` and `mail`. If you don't have a keypair yet run
 `ssh-keygen -t ed25519` first. See [docs/unattended.md](docs/unattended.md) for the full
 transport rationale.
 

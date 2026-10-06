@@ -1,16 +1,16 @@
 ---
 # One-time SSH transport bootstrap for shrike. Runs over WinRM as the
-# `ansible` user (the regular shrike inventory entry). Idempotent.
+# `ansible` user (the `windows_winrm` inventory group), because SSH
+# doesn't exist yet on a fresh rebuild. Idempotent.
 #
-# Sets shrike up so SSH key auth as `mail` works, so that subsequent
-# winget-over-ansible work can run via the SSH transport instead of
-# WinRM. See docs/unattended.md "SSH transport for desktop apps".
+# Sets shrike up so SSH key auth works for admin users (`ansible` and
+# `mail`). Every other playbook then runs over SSH with no password. See docs/unattended.md "SSH transport for desktop apps".
 #
 # Prerequisite: an SSH keypair at ~/.ssh/id_ed25519{,.pub} on the
 # controller (the default macOS / Linux ed25519 location). Override
 # with -e ssh_public_key_path=... if yours lives elsewhere.
 - name: shrike — SSH transport bootstrap
-  hosts: windows
+  hosts: windows_winrm
   gather_facts: false
   vars:
     ssh_public_key_path: "{{ lookup('env', 'HOME') }}/.ssh/id_ed25519.pub"

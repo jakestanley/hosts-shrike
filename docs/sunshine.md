@@ -8,7 +8,7 @@ to phones/tablets/dedicated clients without going through Steam.
 ## What the role does
 
 - **Install** — `sunshine` and `vigembus` chocolatey packages (over
-  WinRM, same transport as the `services` role). ViGEmBus is a virtual
+  SSH as `ansible`, same transport as the `services` role). ViGEmBus is a virtual
   gamepad bus driver; Sunshine refuses to start without it ("Fatal:
   ViGEmBus is not installed or running"). A host reboot may be needed
   the first time the driver lands.
@@ -36,7 +36,7 @@ Bundled with `shrike-bootstrap.yml`. For a focused run:
 
 ```sh
 cd ansible
-ansible-playbook playbooks/shrike-sunshine.yml --ask-pass
+ansible-playbook playbooks/shrike-sunshine.yml
 ```
 
 ## After install — manual one-time setup

@@ -7,7 +7,7 @@ service.
 ## Run
 
 ```sh
-ansible-playbook playbooks/shrike-bootstrap.yml --ask-pass
+ansible-playbook playbooks/shrike-bootstrap.yml
 ```
 
 The whole playbook is idempotent so a full re-run is the standard
@@ -17,8 +17,7 @@ specific step, use `--start-at-task`:
 ```sh
 ansible-playbook playbooks/shrike-bootstrap.yml --list-tasks
 ansible-playbook playbooks/shrike-bootstrap.yml \
-    --start-at-task "Install or update NSSM services via each repo's up.ps1" \
-    --ask-pass
+    --start-at-task "Install or update NSSM services via each repo's up.ps1"
 ```
 
 ## What gets installed

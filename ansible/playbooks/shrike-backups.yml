@@ -3,7 +3,7 @@
 # without re-running the rest of the bootstrap.
 #
 # Usage:
-#   ansible-playbook playbooks/shrike-backups.yml --ask-pass
+#   ansible-playbook playbooks/shrike-backups.yml
 - name: Configure backups on shrike
   hosts: windows
   gather_facts: false

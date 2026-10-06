@@ -68,22 +68,23 @@ Edit `ansible/inventory.ini`:
 - `ansible_host` — resolvable hostname or IP
 - `ansible_user` — the local admin you created above (default: `ansible`)
 
-The password is not stored in inventory. Ansible prompts for it on stdin via
-`--ask-pass`. This is the officially supported workflow — no vault or
-external credential lookup.
+The password is not stored anywhere. It's only needed once, for
+`shrike-ssh-bootstrap.yml` over WinRM (`--ask-pass`). That playbook
+publishes your SSH key, and every other playbook then authenticates with
+the key, with no password and no vault.
 
 ## Run
 
-Two transports, run in order. The first two commands are WinRM-as-`ansible`;
-the last is SSH-as-`mail` and requires the SSH transport to have been
-set up first (`shrike-ssh-bootstrap.yml` does that, idempotently — safe
-to re-run, no-op after the first success).
+Run in order. The SSH bootstrap is the only WinRM step and the only
+password prompt. It's idempotent, safe to re-run, and a no-op after the
+first success. Everything after it is SSH key auth: as `ansible` for the
+machine config, as `mail` for winget.
 
 ```sh
 cd ansible
-ansible -m win_ping windows --ask-pass                           # connectivity smoke test
-ansible-playbook playbooks/shrike-bootstrap.yml --ask-pass       # config baseline
-ansible-playbook playbooks/shrike-ssh-bootstrap.yml --ask-pass   # one-time: OpenSSH + key
+ansible-playbook playbooks/shrike-ssh-bootstrap.yml --ask-pass   # one-time: OpenSSH + key (WinRM)
+ansible -m win_ping windows                                      # connectivity smoke test (SSH)
+ansible-playbook playbooks/shrike-bootstrap.yml                  # config baseline
 ansible-playbook playbooks/shrike-desktop-apps.yml               # winget desktop apps
 ```
 
@@ -157,7 +158,7 @@ earlier ones, use `--start-at-task "<task name>"`:
 
 ```sh
 ansible-playbook playbooks/shrike-bootstrap.yml --list-tasks
-ansible-playbook playbooks/shrike-bootstrap.yml --start-at-task "Configure NTP peers and force resync" --ask-pass
+ansible-playbook playbooks/shrike-bootstrap.yml --start-at-task "Configure NTP peers and force resync"
 ```
 
 Task-level tags have been removed deliberately — see the roadmap in the
