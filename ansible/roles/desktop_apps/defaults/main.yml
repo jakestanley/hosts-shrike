@@ -18,7 +18,6 @@ desktop_packages:
   - { id: 'Microsoft.Git',                        source: 'winget' }
   - { id: 'Mozilla.Firefox',                      source: 'winget' }
   - { id: 'Obsidian.Obsidian',                    source: 'winget' }
-  - { id: 'Playnite.Playnite',                    source: 'winget' }  # Cross-launcher game library frontend
   - { id: 'thebookisclosed.Vive',                 source: 'winget' }  # ViveTool — Windows feature flag toggler
   - { id: 'Valve.Steam',                          source: 'winget' }
   - { id: 'VideoLAN.VLC',                         source: 'winget' }
