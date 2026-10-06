@@ -27,6 +27,27 @@ ansible-playbook playbooks/shrike-bootstrap.yml \
 - `homelab-rtx` — GPU telemetry
 - `homelab-demucs` — Demucs separation API
 - `homelab-ollama` — Ollama HTTP wrapper
+- `homelab-relay` — RTMP stream relay (MediaMTX, NVENC transcoding,
+  archive to `D:\RelayRecordings`)
+
+## homelab-relay
+
+- **Never run the services role during a broadcast.** It passes `-Restart`
+  to every `up.ps1`, which restarts all of the relay's NSSM services and
+  drops the stream. To change relay config mid-broadcast, edit `.env` on
+  shrike and run `C:\homelab\homelab-relay\scripts\up.ps1` without
+  `-Restart` (elevated). That restarts only what changed.
+- **`INGEST_KEY` is set by hand, once.** It must equal batw's
+  `STREAM_KEY_LIVE` (letters, digits, `_ . -` only), and `up.ps1` refuses
+  the `.env.example` placeholder. The first deploy clones and seeds `.env`,
+  then fails at the config check. Set the key in
+  `C:\homelab\homelab-relay\.env` and re-run. The role never overwrites an
+  existing `.env`, so later deploys need no input. Platform stream keys are
+  optional; an output with no key is disabled.
+- The first run needs internet: `up.ps1` downloads the pinned MediaMTX and
+  ffmpeg into `tools\`, and pip installs into `.venv`.
+- Logs: `C:\homelab\homelab-relay\logs\`. Services:
+  `homelab-relay-{mediamtx,recorder,status,out-*}`.
 
 Override `services_root` or `homelab_services` from inventory if you want a
 different install location or a different set of repos.

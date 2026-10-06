@@ -12,3 +12,12 @@ homelab_services:
   - name: homelab-ollama
     url: https://github.com/jakestanley/homelab-ollama.git
     env_overrides: {}
+  # RTMP relay (MediaMTX + NVENC ffmpeg, one NSSM service per process).
+  # up.ps1 fetches its own pinned MediaMTX and ffmpeg into tools\, and
+  # refuses to run until INGEST_KEY in .env matches batw's STREAM_KEY_LIVE.
+  # The role passes -Restart, which restarts every relay service: never run
+  # the services role while a broadcast is live.
+  - name: homelab-relay
+    url: https://github.com/jakestanley/homelab-relay.git
+    env_overrides:
+      RECORD_DIR: D:\RelayRecordings
