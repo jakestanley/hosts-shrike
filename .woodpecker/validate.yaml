@@ -14,11 +14,16 @@ steps:
   - name: validate
     image: python:3.13-slim
     environment:
-      HOSTS_CORE_TOKEN:
-        from_secret: hosts_core_deploy_token
+      # Read-only GitHub deploy key for the private hosts-core repo
+      # (requirements.yml uses its SSH URL). GitHub's host key is pinned.
+      HOSTS_CORE_DEPLOY_KEY:
+        from_secret: hosts_core_deploy_key
+      GIT_SSH_COMMAND: ssh -i /tmp/ssh/hosts_core -o IdentitiesOnly=yes -o UserKnownHostsFile=/tmp/ssh/github_known_hosts -o StrictHostKeyChecking=yes
     commands:
-      - apt-get -qq update && apt-get -qq install -y --no-install-recommends git >/dev/null
-      - git config --global url."https://x-access-token:$${HOSTS_CORE_TOKEN}@github.com/".insteadOf "git@github.com:"
+      - apt-get -qq update && apt-get -qq install -y --no-install-recommends git openssh-client >/dev/null
+      # $$ defers expansion to runtime, when the secret is set.
+      - install -d -m 700 /tmp/ssh && printf '%s\n' "$${HOSTS_CORE_DEPLOY_KEY}" > /tmp/ssh/hosts_core && chmod 600 /tmp/ssh/hosts_core
+      - echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" > /tmp/ssh/github_known_hosts
       - python3 -m pip install --quiet ansible-core
       - cd ansible
       - ansible-galaxy collection install -r requirements.yml -r ci/requirements-ci.yml
