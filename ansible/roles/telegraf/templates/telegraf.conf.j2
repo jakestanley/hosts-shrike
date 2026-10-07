@@ -1,0 +1,27 @@
+# {{ ansible_managed }}
+[agent]
+  interval = "10s"
+  round_interval = true
+  flush_interval = "10s"
+  hostname = "{{ telegraf_hostname }}"
+
+[[outputs.influxdb_v2]]
+  urls = ["{{ telegraf_influxdb_url }}"]
+  token = "{{ telegraf_influxdb_token }}"
+  organization = "{{ telegraf_influxdb_org }}"
+  bucket = "{{ telegraf_influxdb_bucket }}"
+
+[[inputs.cpu]]
+  percpu = false
+  totalcpu = true
+  collect_cpu_time = false
+  report_active = true
+
+[[inputs.mem]]
+
+# n_cpus (panel sizing in homelab-rogues). Load averages don't exist on
+# Windows, so only the Linux hosts report system.load_*.
+[[inputs.system]]
+
+[[inputs.nvidia_smi]]
+  bin_path = '{{ telegraf_nvidia_smi_path }}'

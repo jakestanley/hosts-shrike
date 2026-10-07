@@ -1,0 +1,27 @@
+---
+# Pinned to the same release adler runs. InfluxData publishes no checksum
+# file for the Windows zip - this hash was taken from a download of it.
+telegraf_version: 1.40.1
+telegraf_zip_url: "https://dl.influxdata.com/telegraf/releases/telegraf-{{ telegraf_version }}_windows_amd64.zip"
+telegraf_zip_sha256: cabe07907628afc17ce8c58a1c27b3a55a838b1fb9418b2c05e9342e6e8af8d9
+
+telegraf_install_root: C:\Program Files\telegraf
+telegraf_exe: "{{ telegraf_install_root }}\\telegraf-{{ telegraf_version }}\\telegraf.exe"
+telegraf_config_dir: C:\ProgramData\telegraf
+telegraf_config: "{{ telegraf_config_dir }}\\telegraf.conf"
+telegraf_service_name: telegraf
+
+telegraf_influxdb_url: https://metrics.stanley.arpa
+telegraf_influxdb_org: stanley
+telegraf_influxdb_bucket: system
+
+# Lower-case to match the Linux hosts' `host` tag (Windows reports SHRIKE).
+telegraf_hostname: shrike
+
+# Write-only token scoped to the system bucket, kept on the *controller*
+# (never in this repo). Read at apply time and templated into the config,
+# whose directory is locked to SYSTEM + Administrators.
+telegraf_influxdb_token_src: "{{ lookup('env', 'HOME') }}/.config/homelab/telegraf/shrike.token"
+
+# Installed by the NVIDIA driver; collects GPU utilisation for rogues.
+telegraf_nvidia_smi_path: C:\Windows\System32\nvidia-smi.exe

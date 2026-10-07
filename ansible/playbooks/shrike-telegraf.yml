@@ -1,0 +1,13 @@
+---
+# Surgical playbook: install + configure Telegraf (CPU/mem/GPU to the
+# homelab InfluxDB, for homelab-rogues) without re-running the rest of the
+# bootstrap. Needs the write token at ~/.config/homelab/telegraf/shrike.token
+# on the controller.
+#
+# Usage:
+#   ansible-playbook playbooks/shrike-telegraf.yml
+- name: Configure Telegraf on shrike
+  hosts: windows
+  gather_facts: false
+  roles:
+    - telegraf

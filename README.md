@@ -31,6 +31,7 @@ cd ansible
 ansible-playbook playbooks/shrike-ssh-bootstrap.yml --ask-pass   # one-time: OpenSSH + key (WinRM)
 ansible-playbook playbooks/shrike-bootstrap.yml                  # config baseline (SSH as ansible)
 ansible-playbook playbooks/shrike-desktop-apps.yml               # desktop apps (SSH as mail)
+ansible-playbook playbooks/shrike-telegraf.yml                   # CPU/mem/GPU -> InfluxDB (needs ~/.config/homelab/telegraf/shrike.token)
 ```
 
 The SSH bootstrap publishes your `~/.ssh/id_ed25519.pub` into shrike's

@@ -1,0 +1,86 @@
+---
+# Telegraf on shrike: CPU, memory and NVIDIA GPU stats to the homelab
+# InfluxDB (system bucket) for homelab-rogues. Same metrics and tags as
+# hosts-core's Linux telegraf role, plus nvidia_smi.
+
+- name: Ensure Telegraf install and config directories exist
+  ansible.windows.win_file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - "{{ telegraf_install_root }}"
+    - "{{ telegraf_config_dir }}"
+
+- name: Download pinned Telegraf release
+  ansible.windows.win_get_url:
+    url: "{{ telegraf_zip_url }}"
+    dest: "C:\\Windows\\Temp\\telegraf-{{ telegraf_version }}_windows_amd64.zip"
+    checksum: "{{ telegraf_zip_sha256 }}"
+    checksum_algorithm: sha256
+
+- name: Extract Telegraf
+  community.windows.win_unzip:
+    src: "C:\\Windows\\Temp\\telegraf-{{ telegraf_version }}_windows_amd64.zip"
+    dest: "{{ telegraf_install_root }}"
+    creates: "{{ telegraf_exe }}"
+
+# The config holds the write token - only SYSTEM (the service account) and
+# Administrators may read it, not the default ProgramData Users access.
+- name: Stop config directory inheriting ProgramData permissions
+  ansible.windows.win_acl_inheritance:
+    path: "{{ telegraf_config_dir }}"
+    state: absent
+    reorganize: false
+
+- name: Grant SYSTEM and Administrators full control of config directory
+  ansible.windows.win_acl:
+    path: "{{ telegraf_config_dir }}"
+    user: "{{ item }}"
+    rights: FullControl
+    type: allow
+    state: present
+    inherit: ContainerInherit, ObjectInherit
+    propagation: None
+  loop:
+    - SYSTEM
+    - Administrators
+
+- name: Template telegraf.conf
+  ansible.windows.win_template:
+    src: telegraf.conf.j2
+    dest: "{{ telegraf_config }}"
+  vars:
+    telegraf_influxdb_token: "{{ lookup('file', telegraf_influxdb_token_src) | trim }}"
+  no_log: true
+  notify: restart telegraf
+
+# telegraf.exe registers itself as a native Windows service. Re-register
+# when the service points at a different binary or config (e.g. after a
+# version bump), so the pinned version is the one actually running.
+- name: Register Telegraf Windows service
+  ansible.windows.win_powershell:
+    parameters:
+      Exe: "{{ telegraf_exe }}"
+      Config: "{{ telegraf_config }}"
+      Name: "{{ telegraf_service_name }}"
+    script: |
+      param($Exe, $Config, $Name)
+      $Ansible.Changed = $false
+      $svc = Get-CimInstance Win32_Service -Filter "Name='$Name'"
+      if ($svc -and ($svc.PathName -notlike "*$Exe*" -or $svc.PathName -notlike "*$Config*")) {
+        Stop-Service -Name $Name -ErrorAction SilentlyContinue
+        & sc.exe delete $Name | Out-Null
+        Start-Sleep -Seconds 2
+        $svc = $null
+      }
+      if (-not $svc) {
+        & $Exe --service install --service-name $Name --service-display-name Telegraf --config $Config
+        if ($LASTEXITCODE -ne 0) { throw "telegraf --service install failed: $LASTEXITCODE" }
+        $Ansible.Changed = $true
+      }
+
+- name: Ensure Telegraf service is running
+  ansible.windows.win_service:
+    name: "{{ telegraf_service_name }}"
+    state: started
+    start_mode: auto
