@@ -7,7 +7,7 @@
 
 - name: Stage Stanley Homelab Root CA on host
   ansible.windows.win_copy:
-    src: "{{ lookup('env', 'HOME') }}/homelab.crt"
+    src: "{{ trust_ca_src }}"
     dest: C:\Windows\Temp\stanley-homelab-root-ca.crt
 
 - name: Import Stanley Homelab Root CA into LocalMachine\Root if absent

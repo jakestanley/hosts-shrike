@@ -4,3 +4,7 @@
 # Must match hosts-core's deploy_user_key. See hosts-core README
 # "CI deployments".
 ci_deploy_key_line: 'from="10.92.8.6" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBcjYZKX/YtvXNL8gKAqn87VOtJ/Ea8/yMICo+wvzXQw woodpecker-ci@adler'
+
+# The homelab root CA on the controller - adler's canonical copy, the same
+# default as hosts-core's trust_ca role (and where CI puts it).
+trust_ca_src: /etc/homelab/certs/ca/ca.crt
