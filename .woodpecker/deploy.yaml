@@ -41,5 +41,7 @@ steps:
       - echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" > /tmp/ssh/github_known_hosts
       - python3 -m pip install --quiet ansible-core
       - cd ansible
-      - ansible-galaxy collection install -r requirements.yml -r ci/requirements-ci.yml
+      # One -r per call: ansible-galaxy only honours the last -r it is given.
+      - ansible-galaxy collection install -r requirements.yml
+      - ansible-galaxy collection install -r ci/requirements-ci.yml
       - ~/.ansible/collections/ansible_collections/jakestanley/hosts/ci/run-ansible.sh deploy
