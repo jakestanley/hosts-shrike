@@ -1,0 +1,25 @@
+# Syntax-checks every playbook. Shared logic: hosts-core ci/run-ansible.sh
+# (see hosts-core README "CI deployments").
+when:
+  - event: push
+    branch: ${CI_REPO_DEFAULT_BRANCH}
+  - event: manual
+
+# Pin to the Docker-backed agent - an unlabeled workflow can match the
+# native host-apply agent, which can't run image: steps.
+labels:
+  backend: docker
+
+steps:
+  - name: validate
+    image: python:3.13-slim
+    environment:
+      HOSTS_CORE_TOKEN:
+        from_secret: hosts_core_deploy_token
+    commands:
+      - apt-get -qq update && apt-get -qq install -y --no-install-recommends git >/dev/null
+      - git config --global url."https://x-access-token:$${HOSTS_CORE_TOKEN}@github.com/".insteadOf "git@github.com:"
+      - python3 -m pip install --quiet ansible-core
+      - cd ansible
+      - ansible-galaxy collection install -r requirements.yml -r ci/requirements-ci.yml
+      - ~/.ansible/collections/ansible_collections/jakestanley/hosts/ci/run-ansible.sh validate

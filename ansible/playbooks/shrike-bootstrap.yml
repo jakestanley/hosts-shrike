@@ -9,3 +9,4 @@
     - services
     - backups
     - telegraf
+    - ci_access

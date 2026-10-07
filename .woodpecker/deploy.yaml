@@ -1,0 +1,40 @@
+# Deploys shrike's config. shrike is a desktop that's often in use: a push
+# only dry-runs (and skips, green, if shrike is off); applying is a manual
+# run, with the variable DEPLOY_PLAYBOOK choosing the playbook (default
+# playbooks/shrike-bootstrap.yml; e.g. playbooks/shrike-telegraf.yml).
+# shrike-desktop-apps.yml runs as `mail`, not the CI user - not for CI.
+# Shared logic: hosts-core ci/run-ansible.sh (see hosts-core README
+# "CI deployments").
+when:
+  - event: push
+    branch: ${CI_REPO_DEFAULT_BRANCH}
+  - event: manual
+
+depends_on:
+  - validate
+
+labels:
+  backend: docker
+
+steps:
+  - name: deploy
+    image: python:3.13-slim
+    environment:
+      HOSTS_CORE_TOKEN:
+        from_secret: hosts_core_deploy_token
+      ANSIBLE_DEPLOY_KEY:
+        from_secret: ansible_deploy_key
+      TELEGRAF_TOKEN:
+        from_secret: telegraf_token
+      DEPLOY_HOST: shrike
+      DEPLOY_ADDRESS: shrike.stanley.arpa
+      DEPLOY_ON_PUSH: check
+      DEPLOY_SKIP_IF_OFFLINE: "true"
+      DEPLOY_DEFAULT_PLAYBOOK: playbooks/shrike-bootstrap.yml
+    commands:
+      - apt-get -qq update && apt-get -qq install -y --no-install-recommends git openssh-client >/dev/null
+      - git config --global url."https://x-access-token:$${HOSTS_CORE_TOKEN}@github.com/".insteadOf "git@github.com:"
+      - python3 -m pip install --quiet ansible-core
+      - cd ansible
+      - ansible-galaxy collection install -r requirements.yml -r ci/requirements-ci.yml
+      - ~/.ansible/collections/ansible_collections/jakestanley/hosts/ci/run-ansible.sh deploy

@@ -1,0 +1,11 @@
+---
+# Surgical playbook: authorize Woodpecker CI's deploy key on shrike. Run
+# once by hand (SSH key auth, no password) before CI can reach shrike.
+#
+# Usage:
+#   ansible-playbook playbooks/shrike-ci-access.yml
+- name: Authorize CI on shrike
+  hosts: windows
+  gather_facts: false
+  roles:
+    - ci_access

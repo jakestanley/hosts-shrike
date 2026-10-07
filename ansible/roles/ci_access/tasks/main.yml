@@ -1,0 +1,10 @@
+---
+# Lets Woodpecker CI in as `ansible` (an Administrator, so sshd reads
+# administrators_authorized_keys). Adds the line rather than rewriting the
+# file, so the controller key from shrike-ssh-bootstrap.yml stays; that
+# playbook includes the same line, so re-running it doesn't drop CI.
+- name: Authorize the CI deploy key
+  community.windows.win_lineinfile:
+    path: C:\ProgramData\ssh\administrators_authorized_keys
+    line: "{{ ci_deploy_key_line }}"
+    state: present

@@ -1,0 +1,6 @@
+---
+# Woodpecker CI's deploy key, restricted to connections from adler. Public
+# half only - the private key is the Woodpecker secret ansible_deploy_key.
+# Must match hosts-core's deploy_user_key. See hosts-core README
+# "CI deployments".
+ci_deploy_key_line: 'from="10.92.8.6" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBcjYZKX/YtvXNL8gKAqn87VOtJ/Ea8/yMICo+wvzXQw woodpecker-ci@adler'

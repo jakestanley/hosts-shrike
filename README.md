@@ -133,3 +133,21 @@ Two paths to a real fix, not mutually exclusive:
   `common`-role trust task is sufficient — no per-service env-var
   plumbing needed.
 
+
+## CI
+
+Deployed by Woodpecker - how it works, secrets, and bootstrapping are
+documented once in [hosts-core's "CI deployments"](https://github.com/jakestanley/hosts-core#ci-deployments). Specific to
+this host:
+
+- shrike is often in use: a push to `main` only **dry-runs**, and skips
+  (green) if shrike is off. Applying is a manual run; set the variable
+  `DEPLOY_PLAYBOOK` to pick a playbook (default
+  `playbooks/shrike-bootstrap.yml`). `shrike-desktop-apps.yml` runs as `mail`
+  and is not run from CI.
+- shrike has its own `ansible` admin account instead of hosts-core's
+  `deploy_user` role: the CI key is added to `administrators_authorized_keys`
+  by the `ci_access` role (`playbooks/shrike-ci-access.yml`, run once by hand)
+  and kept by `shrike-ssh-bootstrap.yml`. Key line: `ansible/group_vars/all.yml`.
+- Pipelines run from `ansible/`; `ansible/ci/known_hosts` pins the host key.
+- Secrets: `hosts_core_deploy_token`, `ansible_deploy_key`, `telegraf_token`.

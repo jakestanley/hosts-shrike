@@ -1,0 +1,2 @@
+# shrike host key for CI (pinned from adler's known_hosts, 2026-10-07). See hosts-core README "CI deployments".
+shrike.stanley.arpa ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP9N/rqNiisr513HGTxf5OtPFPg14l1rgbxxILWLl3em
