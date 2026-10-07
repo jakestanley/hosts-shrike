@@ -21,3 +21,6 @@ homelab_services:
     url: https://github.com/jakestanley/homelab-relay.git
     env_overrides:
       RECORD_DIR: D:\RelayRecordings
+      # What OBS publishes to (shown on the status page). shrike's own name:
+      # stream-relay.stanley.arpa resolves to the nginx host, not here.
+      RELAY_INGEST_HOST: shrike.stanley.arpa
