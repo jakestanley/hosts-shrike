@@ -90,13 +90,13 @@ when the need shows up:
 
 The services role's "Seed .env from .env.example" task
 (`ansible/roles/services/tasks/main.yml`) cannot currently deliver
-secrets like `RTX_INFLUX_TOKEN`:
+secrets like an InfluxDB token:
 
 - It skips entirely if `.env` already exists on the host, so
   `env_overrides` only fires on a fresh clone.
 - Its override regex only matches uncommented `KEY=` lines, so
   commented-out keys in `.env.example` (the InfluxDB block in
-  `homelab-rtx` is the live example) can't be activated by an override.
+  the retired `homelab-rtx` was the example) can't be activated by an override.
 
 To fix: (i) merge `env_overrides` into an existing `.env` instead of
 short-circuiting, (ii) widen the regex to match an optional leading
@@ -108,15 +108,16 @@ rebuild.
 
 ### Trust the Stanley Homelab Root CA from service Python processes
 
-`requests` / `urllib3` (used by `homelab-rtx` to publish to InfluxDB)
-consult `certifi` — not the OS trust store — so even after the
+`requests` / `urllib3` (as the retired `homelab-rtx` used to publish to
+InfluxDB) consult `certifi` — not the OS trust store — so even after the
 `common` role installs the root CA into Windows' `LocalMachine\Root`,
 service-side Python still rejects `*.stanley.arpa` certificates.
 
 The current workaround is host-local and manual:
 `C:\homelab\stanley-homelab-root-ca.crt` was uploaded by hand and
 `REQUESTS_CA_BUNDLE=C:\homelab\stanley-homelab-root-ca.crt` was
-appended to `homelab-rtx`'s `.env`. This won't survive a clean rebuild.
+appended to `homelab-rtx`'s `.env` (retired 2026-10-08). Any other service
+whose Python calls `*.stanley.arpa` would need the same.
 
 Two paths to a real fix, not mutually exclusive:
 

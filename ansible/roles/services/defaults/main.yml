@@ -2,9 +2,6 @@
 services_root: C:\homelab
 
 homelab_services:
-  - name: homelab-rtx
-    url: https://github.com/jakestanley/homelab-rtx.git
-    env_overrides: {}
   - name: homelab-demucs
     url: https://github.com/jakestanley/homelab-demucs.git
     env_overrides:

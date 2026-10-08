@@ -102,7 +102,7 @@ steps.
    networking block (WoL prep, ICMPv4 echo, NTP, Sleep-on-LAN NSSM
    service).
 2. **gaming** — Steam Remote Play registry + firewall (UDP 27031-27036).
-3. **services** — clones `homelab-rtx`, `homelab-demucs`, `homelab-ollama`
+3. **services** — clones `homelab-demucs`, `homelab-ollama`, `homelab-relay`
    under `C:\homelab\`, seeds `.env` from `.env.example` on first clone, runs
    each repo's `scripts/up.ps1` to install the NSSM services.
 
@@ -129,7 +129,7 @@ playbook — `up.ps1` is idempotent.
 ### Time-windowed dashboards show no data (charts, history)
 
 Symptom: a service is healthy, its API returns rows, but a UI that filters
-to "last N minutes" (e.g. the rtx landing page chart) shows nothing.
+to "last N minutes" (e.g. the retired rtx landing page chart) shows nothing.
 
 Cause: `w32time` on shrike is not syncing. The wall clock drifts from real
 time, so stored timestamps fall outside the browser's filter window.

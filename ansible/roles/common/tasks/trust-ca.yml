@@ -3,7 +3,7 @@
 # trust store. Once present, anything on the host that consults the system
 # trust store (PowerShell, .NET, Python's ssl.create_default_context, etc.)
 # trusts *.stanley.arpa certificates issued by it — including the
-# InfluxDB endpoint that homelab-rtx publishes metrics to.
+# InfluxDB endpoint Telegraf publishes metrics to.
 
 - name: Stage Stanley Homelab Root CA on host
   ansible.windows.win_copy:

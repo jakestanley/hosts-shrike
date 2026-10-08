@@ -24,7 +24,6 @@ ansible-playbook playbooks/shrike-bootstrap.yml \
 
 `ansible/roles/services/defaults/main.yml` defines the list:
 
-- `homelab-rtx` — GPU telemetry
 - `homelab-demucs` — Demucs separation API
 - `homelab-ollama` — Ollama HTTP wrapper
 - `homelab-relay` — RTMP stream relay (MediaMTX, NVENC transcoding,
@@ -62,8 +61,8 @@ Installed via Chocolatey at the top of the role; idempotent.
 
 ## Prerequisites NOT managed by the role
 
-- **NVIDIA drivers + `nvidia-smi` on PATH** — required by `homelab-rtx` and
-  `homelab-demucs`. Install via GeForce Experience or the NVIDIA driver
+- **NVIDIA drivers + `nvidia-smi` on PATH** — required by Telegraf's
+  `nvidia_smi` input and `homelab-demucs`. Install via GeForce Experience or the NVIDIA driver
   installer.
 - **Ollama** — required by `homelab-ollama`. Install from
   <https://ollama.com/download/windows>. The seed task auto-fills
@@ -105,14 +104,13 @@ re-run the playbook.
 
 | Service | NSSM service name | Logs | Data |
 |----------------|------------------|-----------------------------------|----------------------------|
-| homelab-rtx    | `homelab-rtx`    | `C:\homelab\homelab-rtx\logs\`    | repo-local                 |
 | homelab-demucs | `homelab-demucs` | `C:\homelab\homelab-demucs\logs\` | `STORAGE_ROOT` from `.env` |
 | homelab-ollama | `homelab-ollama` | `C:\homelab\homelab-ollama\logs\` | `STATE_DIR` from `.env`    |
 
 ## Inspecting a single service
 
 ```powershell
-Get-Service homelab-rtx
-nssm get homelab-rtx AppEnvironmentExtra
-Get-Content C:\homelab\homelab-rtx\logs\homelab-rtx-stdout.log -Tail 50
+Get-Service homelab-demucs
+nssm get homelab-demucs AppEnvironmentExtra
+Get-Content C:\homelab\homelab-demucs\logs\homelab-demucs-stdout.log -Tail 50
 ```
