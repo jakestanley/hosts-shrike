@@ -1,0 +1,13 @@
+---
+# Surgical playbook: shrike's read-only "guest" SMB shares, opened with the
+# kodi account (\\shrike.stanley.arpa\RelayRecordings, ...). Add shares in
+# roles/guest_shares/defaults/main.yml; see there for why the account is
+# locked down as it is.
+#
+# Usage:
+#   ansible-playbook playbooks/shrike-guest-shares.yml
+- name: Read-only guest shares
+  hosts: windows
+  gather_facts: false
+  roles:
+    - guest_shares

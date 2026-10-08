@@ -134,6 +134,25 @@ Two paths to a real fix, not mutually exclusive:
   plumbing needed.
 
 
+## Guest shares
+
+Read-only SMB shares for Kodi and the LAN, all opened with one account,
+**`kodi` / `kodi`** (deliberately trivial; see below):
+
+- `\\shrike.stanley.arpa\RelayRecordings` - homelab-relay's recordings (`D:\RelayRecordings`)
+
+Add a share as one entry in `ansible/roles/guest_shares/defaults/main.yml`,
+then run `ansible-playbook playbooks/shrike-guest-shares.yml` (or a manual
+CI run with `DEPLOY_PLAYBOOK=playbooks/shrike-guest-shares.yml`).
+
+The password is public on purpose, so the `guest_shares` role makes the
+account useless for anything else: standard user, read-only on each shared
+folder, denied local and Remote Desktop sign-in, refused by sshd
+(`DenyUsers kodi`), hidden from the sign-in screen. The real Guest account
+stays off and SMB signing stays required (true guest access would need both
+weakened). Checked 2026-10-08: reads work; writes, `D$`, anonymous access
+and SSH as `kodi` are all refused.
+
 ## CI
 
 Deployed by Woodpecker - how it works, secrets, and bootstrapping are

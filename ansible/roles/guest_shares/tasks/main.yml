@@ -1,0 +1,81 @@
+---
+- name: Create the shared read-only account
+  ansible.windows.win_user:
+    name: "{{ guest_share_user }}"
+    password: "{{ guest_share_password }}"
+    update_password: always
+    password_never_expires: true
+    user_cannot_change_password: true
+    groups: [Users]
+    groups_action: replace
+    description: Read-only access to shrike's guest shares (hosts-shrike guest_shares role)
+  register: _guest_share_account
+  no_log: true
+
+# Tasks below look the account up by SID; in a dry run that creates it,
+# it doesn't exist yet, so they can only be checked for real.
+- name: Lock down and share
+  when: not (ansible_check_mode and _guest_share_account.changed)
+  block:
+    # Sign-in rights: SMB only needs network logon, so take away the rest.
+    - name: Deny the account local sign-in
+      ansible.windows.win_user_right:
+        name: SeDenyInteractiveLogonRight
+        users: ["{{ guest_share_user }}"]
+        action: add
+
+    - name: Deny the account Remote Desktop sign-in
+      ansible.windows.win_user_right:
+        name: SeDenyRemoteInteractiveLogonRight
+        users: ["{{ guest_share_user }}"]
+        action: add
+
+    - name: Hide the account from the sign-in screen
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList
+        name: "{{ guest_share_user }}"
+        data: 0
+        type: dword
+
+    # Windows OpenSSH allows password login by default; keep this account
+    # out. Must come before any Match block to apply globally.
+    - name: Refuse the account in sshd
+      community.windows.win_lineinfile:
+        path: C:\ProgramData\ssh\sshd_config
+        line: "DenyUsers {{ guest_share_user }}"
+        insertbefore: '^Match '
+      notify: restart sshd
+
+    - name: Ensure shared folders exist
+      ansible.windows.win_file:
+        path: "{{ item.path }}"
+        state: directory
+      loop: "{{ guest_shares }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Grant the account read access to shared folders
+      ansible.windows.win_acl:
+        path: "{{ item.path }}"
+        user: "{{ guest_share_user }}"
+        rights: ReadAndExecute
+        type: allow
+        state: present
+        inherit: ContainerInherit, ObjectInherit
+        propagation: None
+      loop: "{{ guest_shares }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Share folders read-only
+      ansible.windows.win_share:
+        name: "{{ item.name }}"
+        path: "{{ item.path }}"
+        description: "{{ item.description | default('') }}"
+        list: true
+        read: "{{ guest_share_user }}"
+        full: Administrators
+        state: present
+      loop: "{{ guest_shares }}"
+      loop_control:
+        label: "{{ item.name }}"

@@ -10,3 +10,4 @@
     - backups
     - telegraf
     - ci_access
+    - guest_shares

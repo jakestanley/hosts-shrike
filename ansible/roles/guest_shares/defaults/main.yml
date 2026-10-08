@@ -1,0 +1,19 @@
+---
+# Read-only SMB shares for Kodi and anything else on the LAN, all opened
+# with one shared low-privilege account. Add a share by adding an entry:
+#   \\shrike.stanley.arpa\<name>
+guest_shares:
+  # homelab-relay's recordings (RECORD_DIR, see roles/services).
+  - name: RelayRecordings
+    path: D:\RelayRecordings
+    description: Relay recordings (read-only)
+
+# Account readers sign in with. The password is deliberately trivial and
+# not secret (Jake's choice, 2026-10-08: kodi/kodi, to type into Kodi
+# easily). That's only acceptable because this role makes the account
+# useless for anything but reading these shares: standard user, read-only
+# on each shared folder, denied local and Remote Desktop sign-in, refused
+# by sshd, hidden from the sign-in screen. The real Guest account stays
+# off and SMB signing stays required.
+guest_share_user: kodi
+guest_share_password: kodi
