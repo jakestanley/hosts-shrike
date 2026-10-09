@@ -73,6 +73,15 @@ bootstrap by design:
 Tracked here to keep them off the immediate critical path. Add as the need
 arises, not pre-emptively.
 
+### Remove homelab-rtx from the host
+
+The retired `homelab-rtx` (2026-10-08) was dropped from `homelab_services`,
+but the role doesn't uninstall anything. Next time shrike is on, from an
+elevated PowerShell:
+`C:\homelab\homelab-rtx\scripts\uninstall.ps1`, then
+`Remove-Item -Recurse -Force C:\homelab\homelab-rtx`. Optionally archive
+the GitHub repo.
+
 ### Reintroduce a small set of task-level tags
 
 Tags were stripped from all roles to remove visual noise and a tag-table
