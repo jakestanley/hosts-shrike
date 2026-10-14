@@ -33,3 +33,35 @@ desktop_packages:
   # Microsoft Store (msstore source uses opaque ProductIds)
   - { id: '9MV0B5HZVK9Z',                         source: 'msstore' }   # Xbox app
   - { id: '9NKSQGP7F2NH',                         source: 'msstore' }   # WhatsApp
+
+# Apps not on winget, installed from a pinned GitHub release zip into
+# mail's %LOCALAPPDATA%\Programs\<name>. Files are overwritten in place
+# on upgrade, so anything the app writes next to its exe (config,
+# saves) survives a version bump. To upgrade, bump version, asset,
+# sha256 (and archive_root if versioned) together; the sha256 is the
+# digest GitHub publishes for the release asset.
+#
+# Entry shape:
+#   - name: 'dsda-doom'                  # install dir name
+#     repo: 'dsda-org/dsda-doom'
+#     version: 'v0.30.1'                 # release tag
+#     asset: 'dsda-doom-0.30.1-win-x64.zip'
+#     sha256: '<64 hex>'
+#     archive_root: 'dsda-doom-0.30.1-win-x64'
+#
+# archive_root: the single top-level folder inside the zip, if any;
+# its contents are what get installed. Empty when files sit at the
+# zip root.
+github_release_packages: []
+
+# Per-user Start menu shortcuts in mail's profile, for apps whose
+# install doesn't create one (winget portable zips, GitHub release
+# zips). `paths` are candidate exe locations, environment variables
+# expanded and wildcards allowed; the first match wins. No match means
+# the app isn't installed and the shortcut is skipped.
+#
+# Entry shape:
+#   - name: 'dsda-doom'                  # shortcut name
+#     paths:
+#       - '%LOCALAPPDATA%\Programs\dsda-doom\dsda-doom.exe'
+start_menu_shortcuts: []

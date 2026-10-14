@@ -1,0 +1,29 @@
+---
+# Start menu shortcuts (see start_menu_shortcuts in
+# defaults/main.yml). Targets
+# the real exe with its own folder as the working directory, in mail's
+# per-user Start menu. Only rewritten when the target path differs.
+- name: Create Start menu shortcut
+  ansible.builtin.raw: >-
+    $candidates = '{{ item.paths | join('|') }}' -split '\|';
+    $exe = $candidates | ForEach-Object {
+      Get-ChildItem -Path ([Environment]::ExpandEnvironmentVariables($_)) -ErrorAction SilentlyContinue
+    } | Select-Object -First 1 -ExpandProperty FullName;
+    if (-not $exe) { Write-Output '{{ item.name }} not installed; skipping'; exit 0 };
+    $lnk = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\{{ item.name }}.lnk';
+    $shell = New-Object -ComObject WScript.Shell;
+    if ((Test-Path $lnk) -and ($shell.CreateShortcut($lnk).TargetPath -eq $exe)) {
+      Write-Output 'unchanged'
+    } else {
+      $s = $shell.CreateShortcut($lnk);
+      $s.TargetPath = $exe;
+      $s.WorkingDirectory = Split-Path $exe;
+      $s.Description = '{{ item.name }}';
+      $s.Save();
+      Write-Output ('changed: ' + $exe)
+    }
+  register: shortcut_results
+  loop: "{{ start_menu_shortcuts }}"
+  loop_control:
+    label: "{{ item.name }}"
+  changed_when: "'changed' in (shortcut_results.stdout | default(''))"

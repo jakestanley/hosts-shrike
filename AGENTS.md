@@ -68,6 +68,17 @@ To add a new app:
    `ansible-playbook playbooks/shrike-desktop-apps.yml`. The role is
    idempotent; re-runs are safe.
 
+### Apps not on winget
+
+If an app has no winget package but publishes a Windows zip on GitHub
+releases, add it to `github_release_packages` in the same defaults
+file, pinned to a release with the sha256 GitHub publishes for the
+asset. It installs to mail's `%LOCALAPPDATA%\Programs\<name>`.
+
+Portable apps (GitHub zips, and winget packages with
+`InstallerType: zip` / `portable`) get no Start menu entry; add one to
+`start_menu_shortcuts`.
+
 ## Desktop apps: winget install hangs on MSIX packages
 
 If a `winget install` invocation from the `desktop_apps` role hangs

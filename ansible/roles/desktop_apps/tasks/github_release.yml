@@ -1,0 +1,41 @@
+---
+# GitHub release apps (see github_release_packages in
+# defaults/main.yml). A
+# `.installed-sha256` marker in the install dir records which asset is
+# in place; a matching marker short-circuits. Otherwise download,
+# verify the sha256, extract to a temp dir and copy over the install
+# dir without clearing it, so config and saves next to the exe
+# survive upgrades.
+- name: Install GitHub release package
+  ansible.builtin.raw: >-
+    $ErrorActionPreference = 'Stop';
+    $dest = Join-Path $env:LOCALAPPDATA 'Programs\{{ item.name }}';
+    $marker = Join-Path $dest '.installed-sha256';
+    $want = '{{ item.sha256 | lower }}';
+    if ((Test-Path $marker) -and ((Get-Content $marker -Raw).Trim() -eq $want)) {
+      Write-Output 'unchanged'; exit 0
+    };
+    $tmp = Join-Path $env:TEMP ('ghrel-' + [guid]::NewGuid());
+    New-Item -ItemType Directory -Path $tmp | Out-Null;
+    try {
+      $zip = Join-Path $tmp '{{ item.asset }}';
+      $ProgressPreference = 'SilentlyContinue';
+      $url = 'https://github.com/{{ item.repo }}/releases/download/{{ item.version }}/{{ item.asset }}';
+      Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $zip;
+      $got = (Get-FileHash -Algorithm SHA256 $zip).Hash.ToLower();
+      if ($got -ne $want) { throw ('sha256 mismatch: got ' + $got + ', want ' + $want) };
+      $out = Join-Path $tmp 'x';
+      Expand-Archive -Path $zip -DestinationPath $out;
+      $src = if ('{{ item.archive_root }}') { Join-Path $out '{{ item.archive_root }}' } else { $out };
+      New-Item -ItemType Directory -Force -Path $dest | Out-Null;
+      Copy-Item -Path (Join-Path $src '*') -Destination $dest -Recurse -Force;
+      Set-Content -Path $marker -Value $want;
+      Write-Output ('changed: {{ item.name }} {{ item.version }} -> ' + $dest)
+    } finally {
+      Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
+    }
+  register: github_release_results
+  loop: "{{ github_release_packages }}"
+  loop_control:
+    label: "{{ item.name }} {{ item.version }}"
+  changed_when: "'changed' in (github_release_results.stdout | default(''))"

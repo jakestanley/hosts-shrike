@@ -1,0 +1,74 @@
+---
+# Install (and upgrade) desktop apps via winget over SSH as the mail
+# user. PowerShell does not propagate native command exit codes by
+# default; the trailing `exit $LASTEXITCODE` forces winget's status
+# into ansible's rc. The SSH transport may also truncate negative
+# exit codes to the low byte (so -1978335189 -> 43), so the stdout
+# "already installed" string is the source of truth — rc is a coarse
+# signal only.
+#
+# We pre-check `winget list` per package and short-circuit with an
+# "already installed" marker on match, rather than delegating that
+# decision to `winget install`. MSIX packages (AgileBits.1Password
+# is the reference case) can hang `winget install` indefinitely when a
+# running instance would trigger an interactive close dialog — bypassing
+# the install call entirely when the app is already present avoids the
+# whole failure mode, and every downstream check still sees the same
+# "already installed" stdout it saw before.
+#
+# failed_when is deferred so one bad package does not hide the result
+# of the others; the final task aggregates and fails on any real
+# errors.
+- name: winget install desktop package
+  ansible.builtin.raw: >-
+    $listed = winget list --exact --id {{ item.id }}
+    --source {{ item.source }} --accept-source-agreements 2>&1;
+    if ($LASTEXITCODE -eq 0 -and ($listed | Select-String -Quiet
+    -SimpleMatch '{{ item.id }}')) {
+      Write-Output '{{ item.id }} is already installed.';
+      exit 0
+    }
+    winget install --exact --id {{ item.id }}
+    --source {{ item.source }} --silent
+    --accept-source-agreements --accept-package-agreements 2>&1;
+    exit $LASTEXITCODE
+  register: winget_results
+  loop: "{{ desktop_packages }}"
+  loop_control:
+    label: "{{ item.id }}"
+  changed_when:
+    - winget_results.rc == 0
+    - "'already installed' not in (winget_results.stdout | default('') | lower)"
+  failed_when: false
+
+- name: Per-package result
+  ansible.builtin.debug:
+    msg: >-
+      {{ item.item.id }}:
+      rc={{ item.rc }}
+      state={{
+        'installed' if (item.rc == 0 and 'already installed' not in (item.stdout | default('') | lower))
+        else 'already-present' if ('already installed' in (item.stdout | default('') | lower))
+        else 'failed'
+      }}
+      last="{{ (item.stdout | default('')).split('\n')[-3:] | reject('match', '^\\s*$') | join(' / ') | regex_replace('\\s+', ' ') | trim }}"
+  loop: "{{ winget_results.results }}"
+  loop_control:
+    label: "{{ item.item.id }}"
+
+- name: Fail if any package errored
+  ansible.builtin.fail:
+    msg: >-
+      {{
+        winget_results.results
+        | selectattr('rc', 'ne', 0)
+        | rejectattr('stdout', 'search', '(?i)already installed')
+        | map(attribute='item.id')
+        | list
+      }} failed to install
+  when: >-
+    winget_results.results
+    | selectattr('rc', 'ne', 0)
+    | rejectattr('stdout', 'search', '(?i)already installed')
+    | list
+    | length > 0
