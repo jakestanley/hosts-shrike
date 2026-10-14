@@ -1,0 +1,13 @@
+---
+# Install shrike's Doom source ports (UZDoom, dsda-doom) and the Doom
+# Runner launcher over SSH as the `mail` user, with Start menu
+# shortcuts, and register the source ports as engines in Doom Runner.
+# Same transport and prerequisites as shrike-desktop-apps.yml.
+#
+# Usage:
+#   ansible-playbook playbooks/shrike-doom.yml
+- name: shrike — doom
+  hosts: shrike_ssh
+  gather_facts: false
+  roles:
+    - doom

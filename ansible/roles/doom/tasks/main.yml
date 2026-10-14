@@ -1,0 +1,80 @@
+---
+# Doom source ports and launchers, installed with desktop_apps' winget,
+# GitHub release and Start menu shortcut steps, then wired together by
+# registering the engines in Doom Runner.
+- name: Install Doom winget packages
+  ansible.builtin.include_role:
+    name: desktop_apps
+    tasks_from: winget.yml
+  vars:
+    desktop_packages: "{{ doom_winget_packages }}"
+
+- name: Install Doom GitHub release packages
+  ansible.builtin.include_role:
+    name: desktop_apps
+    tasks_from: github_release.yml
+  vars:
+    github_release_packages: "{{ doom_github_release_packages }}"
+
+- name: Create Doom Start menu shortcuts
+  ansible.builtin.include_role:
+    name: desktop_apps
+    tasks_from: shortcuts.yml
+  vars:
+    start_menu_shortcuts: "{{ doom_start_menu_shortcuts }}"
+
+# Doom Runner: register engines (see doom_runner_engines in
+# defaults/main.yml)
+# in the options.json it keeps next to its exe. Engines already listed
+# (matched by exe path) and the rest of the file are left alone.
+#
+# With no options.json yet (fresh install, never launched) a minimal
+# seed is written. It claims version 1.9.1 on purpose: Doom Runner pops
+# up a warning per missing key when the file's version matches its own,
+# but loads an older file quietly with defaults. The appearance keys
+# (geometry, color_scheme, preset_search) are checked regardless of
+# version, so the seed carries Doom Runner's own "unset" values. Doom
+# Runner rewrites the file in full, at its own version, on first exit.
+#
+# Skipped while Doom Runner is running, since it would overwrite the
+# file on exit. Written as UTF-8 without BOM, which Qt's JSON parser
+# needs.
+- name: Register engines in Doom Runner
+  ansible.builtin.raw: >-
+    $ErrorActionPreference = 'Stop';
+    $dir = Join-Path $env:LOCALAPPDATA 'Programs\DoomRunner';
+    if (-not (Test-Path (Join-Path $dir 'DoomRunner.exe'))) { Write-Output 'Doom Runner not installed; skipping'; exit 0 };
+    if (Get-Process -Name DoomRunner -ErrorAction SilentlyContinue) { Write-Output 'Doom Runner is running; skipping'; exit 0 };
+    $env:DOCUMENTS = [Environment]::GetFolderPath('MyDocuments');
+    $env:SAVEDGAMES = (Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders').'{4C5C32FF-BB9D-43B0-B5B4-2D72E54EAAA4}';
+    $expand = { param($p) [Environment]::ExpandEnvironmentVariables($p) -replace '\\', '/' };
+    $file = Join-Path $dir 'options.json';
+    if (Test-Path $file) {
+      $opts = Get-Content -Raw $file | ConvertFrom-Json
+    } else {
+      $opts = '{"version":"1.9.1","geometry":{"x":-2147483648,"y":-2147483648,"width":0,"height":0},"color_scheme":"default","preset_search":{"panel_expanded":false,"case_sensitive":false,"use_regex":false}}' | ConvertFrom-Json
+    };
+    if (-not $opts.engines) { $opts | Add-Member -NotePropertyName engines -NotePropertyValue ([pscustomobject]@{ default_engine = '' }) };
+    $list = @($opts.engines.engine_list | Where-Object { $_ });
+    $added = @();
+    foreach ($e in ('{{ doom_runner_engines | to_json }}' | ConvertFrom-Json)) {
+      $exe = $e.paths | ForEach-Object {
+        Get-ChildItem -Path ([Environment]::ExpandEnvironmentVariables($_)) -ErrorAction SilentlyContinue
+      } | Select-Object -First 1 -ExpandProperty FullName;
+      if (-not $exe) { Write-Output ($e.name + ' not installed; skipping'); continue };
+      $path = $exe -replace '\\', '/';
+      if ($list | Where-Object { $_.path -eq $path }) { continue };
+      if ($list | Where-Object { $_.id -eq $e.id }) { throw ('engine id ' + $e.id + ' already used in options.json') };
+      $exeDir = Split-Path $exe;
+      $configDir = if ($e.config_dir) { & $expand $e.config_dir } else { & $expand $exeDir };
+      $dataDir = if ($e.data_dir) { & $expand $e.data_dir } else { $configDir };
+      $list += [pscustomobject]@{ id = $e.id; name = $e.name; path = $path; config_dir = $configDir; data_dir = $dataDir; family = $e.family };
+      $added += $e.name
+    };
+    if (-not $added) { Write-Output 'unchanged'; exit 0 };
+    $opts.engines | Add-Member -Force -NotePropertyName engine_list -NotePropertyValue $list;
+    $json = ConvertTo-Json -InputObject $opts -Depth 100;
+    [IO.File]::WriteAllText($file, $json, (New-Object Text.UTF8Encoding $false));
+    Write-Output ('changed: added ' + ($added -join ', '))
+  register: doom_runner_engines_result
+  changed_when: "'changed' in (doom_runner_engines_result.stdout | default(''))"

@@ -79,6 +79,16 @@ Portable apps (GitHub zips, and winget packages with
 `InstallerType: zip` / `portable`) get no Start menu entry; add one to
 `start_menu_shortcuts`.
 
+### Doom
+
+Doom source ports and launchers live in the `doom` role
+(`playbooks/shrike-doom.yml`), not in `desktop_packages`. It reuses
+desktop_apps' winget, GitHub release and shortcut steps via
+`include_role` `tasks_from`, with its own `doom_*` lists in
+`ansible/roles/doom/defaults/main.yml`. A new source port usually
+needs an entry in its install list, `doom_start_menu_shortcuts` if
+portable, and `doom_runner_engines`. See `docs/doom.md`.
+
 ## Desktop apps: winget install hangs on MSIX packages
 
 If a `winget install` invocation from the `desktop_apps` role hangs

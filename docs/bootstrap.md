@@ -86,6 +86,7 @@ ansible-playbook playbooks/shrike-ssh-bootstrap.yml --ask-pass   # one-time: Ope
 ansible -m win_ping windows                                      # connectivity smoke test (SSH)
 ansible-playbook playbooks/shrike-bootstrap.yml                  # config baseline
 ansible-playbook playbooks/shrike-desktop-apps.yml               # winget desktop apps
+ansible-playbook playbooks/shrike-doom.yml                       # Doom source ports + Doom Runner
 ```
 
 The SSH bootstrap publishes your controller's `~/.ssh/id_ed25519.pub`

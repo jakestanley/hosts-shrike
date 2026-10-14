@@ -31,6 +31,7 @@ cd ansible
 ansible-playbook playbooks/shrike-ssh-bootstrap.yml --ask-pass   # one-time: OpenSSH + key (WinRM)
 ansible-playbook playbooks/shrike-bootstrap.yml                  # config baseline (SSH as ansible)
 ansible-playbook playbooks/shrike-desktop-apps.yml               # desktop apps (SSH as mail)
+ansible-playbook playbooks/shrike-doom.yml                       # Doom source ports + Doom Runner (SSH as mail)
 ansible-playbook playbooks/shrike-telegraf.yml                   # CPU/mem/GPU -> InfluxDB (needs ~/.config/homelab/telegraf/shrike.token)
 ```
 
@@ -50,6 +51,7 @@ Non-Nix controllers need `ansible-core`, `pywinrm`, and the collections in
 - [docs/wol.md](docs/wol.md) — Wake-on-LAN
 - [docs/sleep-on-lan.md](docs/sleep-on-lan.md) — Sleep-on-LAN
 - [docs/gaming.md](docs/gaming.md) — gaming role (Steam Remote Play)
+- [docs/doom.md](docs/doom.md) — Doom source ports and Doom Runner
 - [docs/sunshine.md](docs/sunshine.md) — Sunshine (Moonlight stream host)
 - [docs/unattended.md](docs/unattended.md) — first-time manual setup (autologon, SSH transport)
 - [docs/maintenance.md](docs/maintenance.md) — periodic manual tasks (NVIDIA driver updates, etc.)
@@ -172,8 +174,8 @@ this host:
 - shrike is often in use: a push to `main` only **dry-runs**, and skips
   (green) if shrike is off. Applying is a manual run; set the variable
   `DEPLOY_PLAYBOOK` to pick a playbook (default
-  `playbooks/shrike-bootstrap.yml`). `shrike-desktop-apps.yml` runs as `mail`
-  and is not run from CI.
+  `playbooks/shrike-bootstrap.yml`). `shrike-desktop-apps.yml` and
+  `shrike-doom.yml` run as `mail` and are not run from CI.
 - shrike has its own `ansible` admin account instead of hosts-core's
   `deploy_user` role: the CI key is added to `administrators_authorized_keys`
   by the `ci_access` role (`playbooks/shrike-ci-access.yml`, run once by hand)

@@ -1,0 +1,60 @@
+---
+# Doom source ports and launchers for shrike, applied by
+# playbooks/shrike-doom.yml. Each list is handed to the matching
+# desktop_apps step (see its defaults for the entry shapes).
+
+doom_winget_packages:
+  - { id: 'UZDoom.UZDoom', source: 'winget' }  # source port (GZDoom successor)
+
+doom_github_release_packages:
+  - name: 'dsda-doom'                          # source port (demo / speedrun focused)
+    repo: 'dsda-org/dsda-doom'
+    version: 'v0.30.1'
+    asset: 'dsda-doom-0.30.1-win-x64.zip'
+    sha256: 'a155552be0056de84a50ee9fbeb5111d4276cdcdbf5aced2d920695f03fbd2d2'
+    archive_root: 'dsda-doom-0.30.1-win-x64'
+  - name: 'DoomRunner'                         # launcher (engines / IWADs / mods presets)
+    repo: 'Youda008/DoomRunner'
+    version: 'v1.9.2'
+    asset: 'DoomRunner-1.9.2-Windows-recent_x86_64-static_exe.zip'
+    sha256: '3e02ffe9df757fe1a8f118dce8c1236065bfbf0b0b6fe450bd8b45db8292b676'
+    archive_root: ''
+
+# All three are portable installs with no Start menu entry of their own.
+doom_start_menu_shortcuts:
+  # winget puts portable apps under Program Files when the session
+  # token is elevated, LOCALAPPDATA otherwise.
+  - name: 'UZDoom'
+    paths:
+      - '%LOCALAPPDATA%\Microsoft\WinGet\Packages\UZDoom.UZDoom_*\uzdoom.exe'
+      - '%ProgramFiles%\WinGet\Packages\UZDoom.UZDoom_*\uzdoom.exe'
+  - name: 'dsda-doom'
+    paths:
+      - '%LOCALAPPDATA%\Programs\dsda-doom\dsda-doom.exe'
+  - name: 'Doom Runner'
+    paths:
+      - '%LOCALAPPDATA%\Programs\DoomRunner\DoomRunner.exe'
+
+# Engines registered in Doom Runner's options.json (which it keeps next
+# to its exe). Entries missing by exe path are appended; existing ones,
+# and everything else in the file, are left alone. `paths` work as in
+# doom_start_menu_shortcuts. config_dir / data_dir default to the exe's
+# dir; %DOCUMENTS% and %SAVEDGAMES% are resolved to mail's known
+# folders. The dirs mirror what Doom Runner's "add engine" dialog would
+# pick. `id` is Doom Runner's 8-hex-digit engine id; any unique value
+# works. `family` is one of Doom Runner's engine families (ZDoom,
+# ChocolateDoom, PrBoom, MBF, EDGE, KEX).
+doom_runner_engines:
+  - id: 'D0000001'
+    name: 'UZDoom'
+    family: 'ZDoom'
+    paths:
+      - '%LOCALAPPDATA%\Microsoft\WinGet\Packages\UZDoom.UZDoom_*\uzdoom.exe'
+      - '%ProgramFiles%\WinGet\Packages\UZDoom.UZDoom_*\uzdoom.exe'
+    config_dir: '%DOCUMENTS%\My Games\UZDoom'
+    data_dir: '%SAVEDGAMES%\UZDoom'
+  - id: 'D0000002'
+    name: 'dsda-doom'
+    family: 'PrBoom'
+    paths:
+      - '%LOCALAPPDATA%\Programs\dsda-doom\dsda-doom.exe'
