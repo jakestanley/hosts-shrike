@@ -147,6 +147,17 @@ Two paths to a real fix, not mutually exclusive:
   `common`-role trust task is sufficient — no per-service env-var
   plumbing needed.
 
+### Copy the PS2 BIOS for RetroArch
+
+LRPS2 needs a PS2 BIOS in `system\pcsx2\bios\` under RetroArch's
+install dir, placed by hand for now (see `docs/emulation.md`). Have the
+`emulation` role copy missing files from a known location. The preferred
+option is a controller-side path via `win_copy`, which avoids the SSH
+double hop. The alternative is an SMB share pulled from shrike: guest
+access works as-is, but an authenticated share needs credentials passed
+to `New-PSDrive -Credential`, since the key-auth session has none to
+forward. Skip without failing when the source is unreachable.
+
 
 ## Guest shares
 
