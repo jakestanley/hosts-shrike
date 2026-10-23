@@ -1,0 +1,15 @@
+---
+# Emulators for shrike, applied by playbooks/shrike-emulation.yml.
+
+# Handed to desktop_apps' winget step (see its defaults for the shape).
+# RetroArch's installer is machine scope (default dir C:\RetroArch-Win64).
+emulation_winget_packages:
+  - { id: 'Libretro.RetroArch', source: 'winget' }
+
+# libretro cores installed into RetroArch's cores dir, by core name
+# (<name>_libretro.dll). Fetched from libretro's nightly buildbot, as
+# the stable builds only ship every core in one 7z. Not pinned: a core
+# is installed once if missing and left alone after that; update it
+# from RetroArch's Online Updater.
+retroarch_cores:
+  - 'pcsx2'                                    # LRPS2 (PlayStation 2)

@@ -87,6 +87,7 @@ ansible -m win_ping windows                                      # connectivity 
 ansible-playbook playbooks/shrike-bootstrap.yml                  # config baseline
 ansible-playbook playbooks/shrike-desktop-apps.yml               # winget desktop apps
 ansible-playbook playbooks/shrike-doom.yml                       # Doom source ports + Doom Runner
+ansible-playbook playbooks/shrike-emulation.yml                  # RetroArch + cores
 ```
 
 The SSH bootstrap publishes your controller's `~/.ssh/id_ed25519.pub`

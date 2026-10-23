@@ -2,8 +2,8 @@
 # only dry-runs (and skips, green, if shrike is off); applying is a manual
 # run, with the variable DEPLOY_PLAYBOOK choosing the playbook (default
 # playbooks/shrike-bootstrap.yml; e.g. playbooks/shrike-telegraf.yml).
-# shrike-desktop-apps.yml and shrike-doom.yml run as `mail`, not the CI
-# user - not for CI.
+# shrike-desktop-apps.yml, shrike-doom.yml and shrike-emulation.yml run
+# as `mail`, not the CI user - not for CI.
 # All the logic is in hosts-core's CI image (see hosts-core README
 # "CI deployments").
 when:

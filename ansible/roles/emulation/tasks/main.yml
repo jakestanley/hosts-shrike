@@ -1,0 +1,42 @@
+---
+# RetroArch from winget, plus its libretro cores.
+- name: Install emulation winget packages
+  ansible.builtin.include_role:
+    name: desktop_apps
+    tasks_from: winget.yml
+  vars:
+    desktop_packages: "{{ emulation_winget_packages }}"
+
+# RetroArch's install dir comes from its uninstall entry (key
+# "RetroArch", written to the 32-bit registry view by its NSIS
+# installer), so a non-default install location still works. A core
+# already in cores\ is left alone, so updates made from RetroArch's
+# Online Updater survive re-runs.
+- name: Install RetroArch core
+  ansible.builtin.raw: >-
+    $ErrorActionPreference = 'Stop';
+    $keys = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\RetroArch',
+    'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\RetroArch';
+    $uninst = $keys | ForEach-Object { (Get-ItemProperty $_ -ErrorAction SilentlyContinue).UninstallString } | Select-Object -First 1;
+    if (-not $uninst) { Write-Output 'RetroArch not installed; skipping'; exit 0 };
+    $dir = Split-Path ($uninst.Trim('"'));
+    $cores = Join-Path $dir 'cores';
+    $dll = '{{ item }}_libretro.dll';
+    if (Test-Path (Join-Path $cores $dll)) { Write-Output 'unchanged'; exit 0 };
+    $tmp = Join-Path $env:TEMP ('core-' + [guid]::NewGuid());
+    New-Item -ItemType Directory -Path $tmp | Out-Null;
+    try {
+      $zip = Join-Path $tmp ($dll + '.zip');
+      $ProgressPreference = 'SilentlyContinue';
+      $url = 'https://buildbot.libretro.com/nightly/windows/x86_64/latest/' + $dll + '.zip';
+      Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $zip;
+      Expand-Archive -Path $zip -DestinationPath $tmp;
+      New-Item -ItemType Directory -Force -Path $cores | Out-Null;
+      Copy-Item -Path (Join-Path $tmp $dll) -Destination $cores;
+      Write-Output ('changed: ' + $dll + ' -> ' + $cores)
+    } finally {
+      Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
+    }
+  register: retroarch_core_results
+  loop: "{{ retroarch_cores }}"
+  changed_when: "'changed' in (retroarch_core_results.stdout | default(''))"

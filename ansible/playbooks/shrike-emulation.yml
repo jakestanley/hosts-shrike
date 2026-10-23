@@ -1,0 +1,12 @@
+---
+# Install RetroArch and its libretro cores (PS2 via LRPS2) over SSH as
+# the `mail` user. Same transport and prerequisites as
+# shrike-desktop-apps.yml.
+#
+# Usage:
+#   ansible-playbook playbooks/shrike-emulation.yml
+- name: shrike — emulation
+  hosts: shrike_ssh
+  gather_facts: false
+  roles:
+    - emulation

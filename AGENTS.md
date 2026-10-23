@@ -89,6 +89,13 @@ desktop_apps' winget, GitHub release and shortcut steps via
 needs an entry in its install list, `doom_start_menu_shortcuts` if
 portable, and `doom_runner_engines`. See `docs/doom.md`.
 
+### Emulation
+
+RetroArch lives in the `emulation` role (`playbooks/shrike-emulation.yml`),
+installed with desktop_apps' winget step. Add a libretro core by its
+name (`<name>_libretro.dll`) to `retroarch_cores` in
+`ansible/roles/emulation/defaults/main.yml`. See `docs/emulation.md`.
+
 ## Desktop apps: winget install hangs on MSIX packages
 
 If a `winget install` invocation from the `desktop_apps` role hangs
