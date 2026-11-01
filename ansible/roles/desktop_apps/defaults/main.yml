@@ -52,7 +52,17 @@ desktop_packages:
 # archive_root: the single top-level folder inside the zip, if any;
 # its contents are what get installed. Empty when files sit at the
 # zip root.
-github_release_packages: []
+github_release_packages:
+  # Unmaintained since 2.14.3 (Dec 2024) and reported broken on some
+  # Windows 11 25H2 setups, but confirmed working on shrike. GitHub
+  # publishes no digest for this release, so the sha256 was computed
+  # from the downloaded asset.
+  - name: 'UWPHook'                            # adds Xbox / Game Pass games to Steam
+    repo: 'BrianLima/UWPHook'
+    version: '2.14.3'
+    asset: 'UWPHook.zip'
+    sha256: '0c542cf2b2753b618b96d4050c08db83317826993744678f36a50745b847b1fb'
+    archive_root: ''
 
 # Per-user Start menu shortcuts in mail's profile, for apps whose
 # install doesn't create one (winget portable zips, GitHub release
@@ -64,4 +74,7 @@ github_release_packages: []
 #   - name: 'dsda-doom'                  # shortcut name
 #     paths:
 #       - '%LOCALAPPDATA%\Programs\dsda-doom\dsda-doom.exe'
-start_menu_shortcuts: []
+start_menu_shortcuts:
+  - name: 'UWPHook'
+    paths:
+      - '%LOCALAPPDATA%\Programs\UWPHook\UWPHook.exe'
