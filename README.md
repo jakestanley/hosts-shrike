@@ -72,6 +72,15 @@ bootstrap by design:
   via Sysinternals Autologon; LSA-stored credential, not re-applied
   per playbook run.
 
+## Steam settings (manual)
+
+Set by hand in Steam, not by Ansible:
+
+- **Xbox Guide button opens the overlay** - in Big Picture, **Settings →
+  Controller → Advanced Settings**, turn on **Enable Guide Button Chords
+  for controllers**. Without it, Steam registers the Guide button (it
+  shows up in device inputs) but the button doesn't open the overlay.
+
 ## Roadmap
 
 Tracked here to keep them off the immediate critical path. Add as the need
